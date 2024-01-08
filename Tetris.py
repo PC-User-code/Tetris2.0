@@ -85,15 +85,6 @@ def draw(filename, surface):
                              (indent + x * tile_size + px, indent + y * tile_size + py, tile_size - p0x,
                               tile_size - p0y), 0)
 
-
-def check_correct_data(width, height, tile_size):
-    if width % tile_size == 0 and height % tile_size == 0:
-        return True
-    else:
-        print("Измените размер окна или размер тайла (Требуется чтобы размер окна делился на размер тайла без остатка)")
-        return False
-
-
 if __name__ == "__main__":
     figures = {"o": "#0F4FA8", "t": "#FFCA90", "l": "#D30068", "j": "#FF9F00", "s": "#00737E", "z": "#3F92D2",
                "i": "#E60042"}
