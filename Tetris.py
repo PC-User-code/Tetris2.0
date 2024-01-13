@@ -270,8 +270,11 @@ if __name__ == "__main__":
                     play = True
                     type = "pause"
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    play = False
-                    type = "pause"
+                    if not play:
+                        running = False
+                    else:
+                        play = False
+                        type = "pause"
             if play:
                 screen.fill((0, 0, 0))
                 all_sprites.draw(screen)
