@@ -4,9 +4,14 @@ import sys
 import random
 
 tests = False
-tile_size = 25
 FPS = 60
-
+screen_width = 800
+screen_height = 700
+play_width = 300
+play_height = 600
+tile_size = 25
+top_left_x = (screen_width - play_width) // 2
+top_left_y = screen_height - play_height
 figures1 = {'S': [['.....',
                    '.....',
                    '..00.',
@@ -104,6 +109,35 @@ figures1 = {'S': [['.....',
                    '.....']]}
 
 
+class Board:
+    def __init__(self, play_width, play_height):
+        self.width = play_width
+        self.height = play_height
+        self.board = [[0] * play_width for _ in range(play_height)]
+        self.left = 10
+        self.top = 10
+        self.cell_size = 30
+
+    def set_view(self, left, top, cell_size):
+        self.left = left
+        self.top = top
+        self.cell_size = cell_size
+
+    def get_cell(self, mouse_pos):
+        x, y = mouse_pos
+        x = (x - self.left) // self.cell_size
+        y = (y - self.top) // self.cell_size
+        if x < 0 or x >= self.width or y < 0 or y >= self.height:
+            return None
+        return x, y
+
+    def render(self, screen):
+        for x in range(self.width):
+            for y in range(self.height):
+                pygame.draw.rect(screen, pygame.Color('white'),
+                                 (self.left + x * self.cell_size, self.top + y * self.cell_size,
+                                  self.cell_size, self.cell_size), 1)
+
 class Tetris:
     def __init__(self):
         # возможные фигруы в тетрисе (игра создана изначально русским программистом на языке Pascal
@@ -114,7 +148,7 @@ class Tetris:
 class Interface(pygame.sprite.Sprite):
     def __init__(self):  # отрисовка интерфейса при игре
         super().__init__()
-        self.image = pygame.Surface([width, height])
+        self.image = pygame.Surface([screen_width, screen_height])
         self.image.fill(pygame.Color("black"))
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = 1, 1
@@ -216,35 +250,50 @@ def load_level():
         a.write(el + '\n')
     a.close()
 
+def start_screen():
+    pass
 
 if __name__ == "__main__":
     figures = {"o": "#0F4FA8", "t": "#FFCA90", "l": "#D30068", "j": "#FF9F00", "s": "#00737E", "z": "#3F92D2",
                "i": "#E60042"}
     pygame.init()
+    size = screen_width, screen_height
+    screen = pygame.display.set_mode(size)
+    board = Board(10, 20)
     pygame.display.set_caption("Tetris")
     icon = pygame.image.load("data\icon.png")
     pygame.display.set_icon(icon)
-    size = width, height = tile_size * 24, tile_size * 24
-    screen = pygame.display.set_mode(size)
     clock = pygame.time.Clock()
-    all_sprites = pygame.sprite.Group()
-    gi = Interface()
-    all_sprites.add(gi)
+    # all_sprites = pygame.sprite.Group()
+    # gi = Interface()
+    # all_sprites.add(gi)
     load_level()
+    fps = 30
+    # start_screen()
     running = True
-    if not tests:
-        score = 1058
-        while running:
-            events = pygame.event.get()
-            for event in events:
-                if event.type == pygame.QUIT:
-                    running = False
-            screen.fill((0, 0, 0))
-            all_sprites.draw(screen)
-            gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
-            gi.print_text(screen, "By D&E ", 0.5, "white", 22.2, 23.2)
-            gi.print_text(screen, "YOUR SCORE", 0.75, "white", 4.2, 22.25)
-            gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
-            pygame.display.flip()
-            clock.tick(FPS)
-    pygame.quit()
+    # if not tests:
+    #     score = 1058
+#         while running:
+#             events = pygame.event.get()
+#             for event in events:
+#                 if event.type == pygame.QUIT:
+#                     running = False
+#             screen.fill((0, 0, 0))
+#             # all_sprites.draw(screen)
+#             # gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
+#             # gi.print_text(screen, "By D&E ", 0.5, "white", 22.2, 23.2)
+#             # gi.print_text(screen, "YOUR SCORE", 0.75, "white", 4.2, 22.25)
+#             # gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
+#             pygame.display.flip()
+#             clock.tick(FPS)
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print(board.get_cell(event.pos))
+        screen.fill((0, 0, 0))
+        board.render(screen)
+        pygame.display.flip()
+pygame.quit()
+
