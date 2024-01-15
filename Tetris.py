@@ -138,6 +138,7 @@ class Board:
                                  (self.left + x * self.cell_size, self.top + y * self.cell_size,
                                   self.cell_size, self.cell_size), 1)
 
+
 class Tetris:
     def __init__(self):
         # возможные фигруы в тетрисе (игра создана изначально русским программистом на языке Pascal
@@ -236,22 +237,44 @@ class Interface(pygame.sprite.Sprite):
                                   tile_size - p0y), 0)
 
 
-def load_level():
+def load_level(tick):
+    cur_fig = None
     with open('data/figures.txt', 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
     shape = random.choice(list(figures1.keys()))
     figure = random.choice(figures1.get(shape))
-    for i in range(5):
-        new_line = 10 * '.' + figure[i] + 10 * '.'
-        level_map[i] = new_line
-    mapFile.close()
-    a = open('data/figures.txt', mode='w', encoding='utf-8')
-    for el in level_map:
-        a.write(el + '\n')
-    a.close()
+    for k in range(len(level_map)):
+        last_line_x = set()
+        if tick == 1000:
+            for j in range(4, -1, -1):
+                if '0' in figure[j]:
+                    last_line = figure[j]  # ..00.
+                    break
+            for i in range(5):
+                if last_line[i] == '0':
+                    last_line_x.append(i)  # (2,3)
+            level_last_x = set()
+            if level_map[k + 1] in level_map:
+                for i in range(5):
+                    if level_map[k + 1] == '0':
+                        last_line_x.append(i)
+            if len(last_line_x.intersection(
+                    level_last_x)) == 0:  # если на последней строке фигуры с 0 индекс 0 совпадает
+                for i in range(5):  # с индексом 0 на следующей строке файла цикл прекращается
+                    new_line = 10 * '.' + figure[i] + 10 * '.'
+                    level_map[i] = new_line
+                mapFile.close()
+                a = open('data/figures.txt', mode='w', encoding='utf-8')
+                for el in level_map:
+                    a.write(el + '\n')
+            else:
+                break
+            a.close()
+
 
 def start_screen():
     pass
+
 
 if __name__ == "__main__":
     figures = {"o": "#0F4FA8", "t": "#FFCA90", "l": "#D30068", "j": "#FF9F00", "s": "#00737E", "z": "#3F92D2",
@@ -273,19 +296,19 @@ if __name__ == "__main__":
     running = True
     # if not tests:
     #     score = 1058
-#         while running:
-#             events = pygame.event.get()
-#             for event in events:
-#                 if event.type == pygame.QUIT:
-#                     running = False
-#             screen.fill((0, 0, 0))
-#             # all_sprites.draw(screen)
-#             # gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
-#             # gi.print_text(screen, "By D&E ", 0.5, "white", 22.2, 23.2)
-#             # gi.print_text(screen, "YOUR SCORE", 0.75, "white", 4.2, 22.25)
-#             # gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
-#             pygame.display.flip()
-#             clock.tick(FPS)
+    #         while running:
+    #             events = pygame.event.get()
+    #             for event in events:
+    #                 if event.type == pygame.QUIT:
+    #                     running = False
+    #             screen.fill((0, 0, 0))
+    #             # all_sprites.draw(screen)
+    #             # gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
+    #             # gi.print_text(screen, "By D&E ", 0.5, "white", 22.2, 23.2)
+    #             # gi.print_text(screen, "YOUR SCORE", 0.75, "white", 4.2, 22.25)
+    #             # gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
+    #             pygame.display.flip()
+    #             clock.tick(FPS)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -296,4 +319,3 @@ if __name__ == "__main__":
         board.render(screen)
         pygame.display.flip()
 pygame.quit()
-
