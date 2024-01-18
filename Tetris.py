@@ -108,7 +108,15 @@ figures1 = {'S': [['.....',
                    '..0..',
                    '.....']]}
 
+def create_board(locked_positions={}):
+    grid = [[(255, 255, 255) for x in range(10)] for x in range(20)]
+    for i in range(len(grid)):
+        for j in range(len(grid[i])):
+            if (j, i) in locked_positions:
+                c = locked_positions[(j, i)]
 
+                grid[i][j] = c
+    return grid
 class Board:
     def __init__(self, play_width, play_height):
         self.width = play_width
@@ -290,7 +298,7 @@ if __name__ == "__main__":
     # all_sprites = pygame.sprite.Group()
     # gi = Interface()
     # all_sprites.add(gi)
-    load_level()
+    load_level(1)
     fps = 30
     # start_screen()
     running = True
