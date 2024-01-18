@@ -3,6 +3,7 @@ import os
 import sys
 import random
 
+pygame.init()
 screen_width = 800
 screen_height = 700
 tetris_width = 300
