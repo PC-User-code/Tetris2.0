@@ -184,7 +184,7 @@ def new_figure(): # новая случайная фигура
     return Block(5, 0, random.choice(figures))
 
 
-def delete_rows(board, fixed, score):  # удаление заполненной строки
+def delete_rows(board, fixed, score):  # удаление заполненной строки.
     full_rows = 0
     for i in range(len(board) - 1, -1, -1):
         row = board[i]
