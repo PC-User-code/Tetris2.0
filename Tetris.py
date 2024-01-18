@@ -203,12 +203,14 @@ def delete_rows(board, fixed, score):
                 fixed[new_key] = fixed.pop(key)
 
 
-def draw_score(screen, score):
+def draw_score(screen, score, level):
     x = mx_left_x + tetris_width + 50
     y = mx_left_y + tetris_height / 2 - 100
     font = pygame.font.SysFont('yugothicui', 30)
     text = font.render("SCORE", 1, (255, 255, 255))
-    score_txt = font.render(str(score[0]), 1, (255, 255, 255))
+    level_text = font.render(level, 1, (255, 255, 255))
+    score_txt = font.render(str(int(score[0]) * 10), 1, (255, 255, 255))
+    screen.blit(level_text, (x + 35, y + 100))
     screen.blit(text, (x + 35, y + 150))
     screen.blit(score_txt, (x + 70, y + 180))
 
@@ -369,9 +371,18 @@ if __name__ == "__main__":
     cur_figure = new_figure()
     clock = pygame.time.Clock()
     falling_time = 0
-
+    level_text = 'Level 1'
+    speeds = open('data/speed.txt', 'r').readlines()
     while run:
-        falling_speed = 0.3
+        if Score[0] < 20:
+            falling_speed = float(speeds[0][:-1])
+        elif 20 <= Score[0] < 40:
+            falling_speed = float(speeds[1][:-1])
+            level_text = 'Level 2'
+        elif 40 <= Score[0]:
+            falling_speed = float(speeds[2][:-1])
+            level_text = 'Level 3'
+
         board = create_board(fixed_pos)
         falling_time += clock.get_rawtime()
         clock.tick()
@@ -426,7 +437,7 @@ if __name__ == "__main__":
 
         draw_app(screen)
         score = str(Score[0])
-        draw_score(screen, score)
+        draw_score(screen, score, level_text)
         pygame.display.update()
 
         if game_over(fixed_pos):
