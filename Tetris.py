@@ -132,11 +132,12 @@ def draw_board(screen, row, column):
 
 
 class Block:
-    def __init__(self, column, row, shape):
+
+    def __init__(self, column, row, figure):
         self.x = column
         self.y = row
-        self.shape = shape
-        self.color = colors[figures.index(shape)]
+        self.figure = figure
+        self.color = colors[figures.index(figure)]
         self.rotation = 0
 
 
@@ -154,6 +155,73 @@ def change_format(figure):
 
     return cords
 
+
+def free_cells(shape, grid):
+    free_cells = [[(j, i) for j in range(10) if grid[i][j] == (255, 255, 255)] for i in range(20)]
+    free_cells = [j for sub in free_cells for j in sub]
+    changed = change_format(shape)
+
+    for cord in changed:
+        if cord not in free_cells:
+            if cord[1] > 0:
+                return False
+
+    return True
+
+
+def game_over(positions):
+    for pos in positions:
+        x, y = pos
+        if y < 1:
+            return True
+    return False
+
+
+def new_figure():
+    global figures, colors
+    return Block(5, 0, random.choice(figures))
+
+
+def delete_rows(board, fixed, score):
+    full_rows = 0
+    for i in range(len(board) - 1, -1, -1):
+        row = board[i]
+        if (255, 255, 255) not in row:
+            full_rows += 1
+            last_y = i
+            score[0] = score[0] + 10
+            print(score[0])  # повысить уровень
+            for j in range(len(row)):
+                del fixed[(j, i)]  # остаются только белые клетки
+
+    if full_rows > 0:
+        for key in sorted(list(fixed), key=lambda x: x[1])[::-1]:
+            x, y = key
+            if y < last_y:
+                new_key = (x, y + full_rows)
+                fixed[new_key] = fixed.pop(key)
+
+
+def draw_score(screen, score):
+    x = mx_left_x + tetris_width + 50
+    y = mx_left_y + tetris_height / 2 - 100
+    font = pygame.font.SysFont('yugothicui', 30)
+    text = font.render("SCORE", 1, (255, 255, 255))
+    score_txt = font.render(str(score[0]), 1, (255, 255, 255))
+    screen.blit(text, (x + 35, y + 150))
+    screen.blit(score_txt, (x + 70, y + 180))
+
+
+def draw_app(screen):
+    screen.fill((0, 0, 0))
+    font = pygame.font.SysFont('yugothicui', 60)
+    text = font.render('T E T R I S', 1, (255, 255, 255))
+    screen.blit(text, (mx_left_x + tetris_width / 2 - (text.get_width() / 2), 30))
+    for i in range(len(board)):
+        for j in range(len(board[i])):
+            pygame.draw.rect(screen, board[i][j],
+                             (mx_left_x + j * block_size, mx_left_y + i * block_size, block_size, block_size), 0)
+    draw_board(screen, 20, 10)
 
 
 # class Tetris:
@@ -288,47 +356,120 @@ def change_format(figure):
 #                 break
 #             a.close()
 
-
-
-
 if __name__ == "__main__":
-    # figures = {"o": "#0F4FA8", "t": "#FFCA90", "l": "#D30068", "j": "#FF9F00", "s": "#00737E", "z": "#3F92D2",
-    #            "i": "#E60042"}
-    pygame.init()
-    size = screen_width, screen_height
-    screen = pygame.display.set_mode(size)
-    pygame.display.set_caption("Tetris")
-    icon = pygame.image.load("data\icon.png")
-    pygame.display.set_icon(icon)
+    screen = pygame.display.set_mode((screen_width, screen_height))
+    pygame.display.set_caption('T E T R I S')
+    global board
+    Score = [0]
+    fixed_pos = {}
+    board = create_board(fixed_pos)
+    change_piece = False
+    run = True
+    cur_figure = new_figure()
     clock = pygame.time.Clock()
-    # all_sprites = pygame.sprite.Group()
-    # gi = Interface()
-    # all_sprites.add(gi)
-    # load_level(1)
-    fps = 30
-    # start_screen()
-    running = True
-    # if not tests:
-    #     score = 1058
-    #         while running:
-    #             events = pygame.event.get()
-    #             for event in events:
-    #                 if event.type == pygame.QUIT:
-    #                     running = False
-    #             screen.fill((0, 0, 0))
-    #             # all_sprites.draw(screen)
-    #             # gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
-    #             # gi.print_text(screen, "By D&E ", 0.5, "white", 22.2, 23.2)
-    #             # gi.print_text(screen, "YOUR SCORE", 0.75, "white", 4.2, 22.25)
-    #             # gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
-    #             pygame.display.flip()
-    #             clock.tick(FPS)
-    while running:
+    falling_time = 0
+
+    while run:
+        falling_speed = 0.3
+        board = create_board(fixed_pos)
+        falling_time += clock.get_rawtime()
+        clock.tick()
+
+        if falling_time / 1000 >= falling_speed:
+            falling_time = 0
+            cur_figure.y += 1
+            if not (free_cells(cur_figure, board)) and cur_figure.y > 0:
+                cur_figure.y -= 1
+                change_piece = True
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
-            create_board()
-            draw_board(screen, 10, 20)
-        pygame.display.flip()
-pygame.quit()
+                run = False
+                pygame.display.quit()
+                quit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    cur_figure.x -= 1
+                    if not free_cells(cur_figure, board):
+                        cur_figure.x += 1
+
+                elif event.key == pygame.K_RIGHT:
+                    cur_figure.x += 1
+                    if not free_cells(cur_figure, board):
+                        cur_figure.x -= 1
+                elif event.key == pygame.K_UP:
+                    cur_figure.rotation = cur_figure.rotation + 1 % len(cur_figure.figure)
+                    if not free_cells(cur_figure, board):
+                        cur_figure.rotation = cur_figure.rotation - 1 % len(cur_figure.figure)
+
+                if event.key == pygame.K_DOWN:
+                    cur_figure.y += 1
+                    if not free_cells(cur_figure, board):
+                        cur_figure.y -= 1
+
+        figure_cord = change_format(cur_figure)
+
+        for i in range(len(figure_cord)):
+            x, y = figure_cord[i]
+            if y > -1:
+                board[y][x] = cur_figure.color
+
+        if change_piece:
+            for cords in figure_cord:
+                fixed_pos[(cords[0], cords[1])] = cur_figure.color
+            cur_figure = new_figure()
+            change_piece = False
+
+            delete_rows(board, fixed_pos, Score)
+
+        draw_app(screen)
+        score = str(Score[0])
+        draw_score(screen, score)
+        pygame.display.update()
+
+        if game_over(fixed_pos):
+            run = False
+        pygame.display.update()
+
+# if __name__ == "__main__":
+#     # figures = {"o": "#0F4FA8", "t": "#FFCA90", "l": "#D30068", "j": "#FF9F00", "s": "#00737E", "z": "#3F92D2",
+#     #            "i": "#E60042"}
+#     pygame.init()
+#     size = screen_width, screen_height
+#     screen = pygame.display.set_mode(size)
+#     pygame.display.set_caption("Tetris")
+#     icon = pygame.image.load("data\icon.png")
+#     pygame.display.set_icon(icon)
+#     clock = pygame.time.Clock()
+#     # all_sprites = pygame.sprite.Group()
+#     # gi = Interface()
+#     # all_sprites.add(gi)
+#     # load_level(1)
+#     fps = 30
+#     # start_screen()
+#     running = True
+#     # if not tests:
+#     #     score = 1058
+#     #         while running:
+#     #             events = pygame.event.get()
+#     #             for event in events:
+#     #                 if event.type == pygame.QUIT:
+#     #                     running = False
+#     #             screen.fill((0, 0, 0))
+#     #             # all_sprites.draw(screen)
+#     #             # gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
+#     #             # gi.print_text(screen, "By D&E ", 0.5, "white", 22.2, 23.2)
+#     #             # gi.print_text(screen, "YOUR SCORE", 0.75, "white", 4.2, 22.25)
+#     #             # gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
+#     #             pygame.display.flip()
+#     #             clock.tick(FPS)
+#     while running:
+#
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 running = False
+#             create_board()
+#             draw_board(screen, 10, 20)
+#         pygame.display.flip()
+# pygame.quit()
