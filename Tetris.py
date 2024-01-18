@@ -112,18 +112,18 @@ figures = [O, T, L, J, S, Z, I]
 colors = ["#0F4FA8", "#FFCA90", "#D30068", "#FF9F00", "#00737E", "#3F92D2", "#E60042"]
 
 
-def create_board(fixed_positions={}):
+def create_board(fixed_positions={}):  # матрица 10 на 20 с значениями цветов, по умолчанию все белые
     grid = [[(255, 255, 255) for x in range(10)] for x in range(20)]
     for i in range(len(grid)):
         for j in range(len(grid[i])):
             if (j, i) in fixed_positions:
-                c = fixed_positions[(j, i)]
+                c = fixed_positions[(j, i)] # если в словаре с фигурами, котрые заффиксированы на дне есть данные, то они заносятся в матрицу
 
                 grid[i][j] = c
     return grid
 
 
-def draw_board(screen, row, column):
+def draw_board(screen, row, column):   # отрисовка поля
     for i in range(row):
         pygame.draw.line(screen, (0, 0, 0), (mx_left_x, mx_left_y + i * block_size),
                          (mx_left_x + tetris_width, mx_left_y + i * block_size))
@@ -142,7 +142,7 @@ class Block:
         self.rotation = 0
 
 
-def change_format(figure):
+def change_format(figure):  # поворот фигуры - остаток от деления на кол-во возможных вариаций фигуры
     cords = []
     format = figure.figure[figure.rotation % len(figure.figure)]
     for i, line in enumerate(format):
@@ -154,10 +154,11 @@ def change_format(figure):
     for i, pos in enumerate(cords):
         cords[i] = (pos[0] - 2, pos[1] - 2)
 
-    return cords
+    return cords # возвращает список кортежей с х и у, на котрых находятся клетки фигуры
 
 
-def free_cells(shape, grid):
+
+def free_cells(shape, grid): # проверка что клетка свободна
     free_cells = [[(j, i) for j in range(10) if grid[i][j] == (255, 255, 255)] for i in range(20)]
     free_cells = [j for sub in free_cells for j in sub]
     changed = change_format(shape)
@@ -170,7 +171,7 @@ def free_cells(shape, grid):
     return True
 
 
-def game_over(positions):
+def game_over(positions): # если координаты блока по у меньше 1, т.е. на верхней строке - конец
     for pos in positions:
         x, y = pos
         if y < 1:
@@ -178,24 +179,24 @@ def game_over(positions):
     return False
 
 
-def new_figure():
+def new_figure(): # новая случайная фигура
     global figures, colors
     return Block(5, 0, random.choice(figures))
 
 
-def delete_rows(board, fixed, score):
+def delete_rows(board, fixed, score):  # удаление заполненной строки
     full_rows = 0
     for i in range(len(board) - 1, -1, -1):
         row = board[i]
-        if (255, 255, 255) not in row:
+        if (255, 255, 255) not in row: # все клетки цветные
             full_rows += 1
             last_y = i
             score[0] = score[0] + 10
-            print(score[0])  # повысить уровень
+            print(score[0])
             for j in range(len(row)):
                 del fixed[(j, i)]  # остаются только белые клетки
 
-    if full_rows > 0:
+    if full_rows > 0: # колличество удаленных строк, от которого зависит на сколько упадут фигуры, котрые не удалились
         for key in sorted(list(fixed), key=lambda x: x[1])[::-1]:
             x, y = key
             if y < last_y:
@@ -203,7 +204,7 @@ def delete_rows(board, fixed, score):
                 fixed[new_key] = fixed.pop(key)
 
 
-def draw_score(screen, score, level):
+def draw_score(screen, score, level): # отрисовка счета и уровня
     x = mx_left_x + tetris_width + 50
     y = mx_left_y + tetris_height / 2 - 100
     font = pygame.font.SysFont('yugothicui', 30)
@@ -215,7 +216,7 @@ def draw_score(screen, score, level):
     screen.blit(score_txt, (x + 70, y + 180))
 
 
-def draw_app(screen):
+def draw_app(screen): # отрисовка всего
     screen.fill((0, 0, 0))
     font = pygame.font.SysFont('yugothicui', 60)
     text = font.render('T E T R I S', 1, (255, 255, 255))
@@ -374,7 +375,7 @@ if __name__ == "__main__":
     level_text = 'Level 1'
     speeds = open('data/speed.txt', 'r').readlines()
     while run:
-        if Score[0] < 20:
+        if Score[0] < 20:               # изменение скорости в зависимости от счета
             falling_speed = float(speeds[0][:-1])
         elif 20 <= Score[0] < 40:
             falling_speed = float(speeds[1][:-1])
@@ -389,7 +390,7 @@ if __name__ == "__main__":
 
         if falling_time / 1000 >= falling_speed:
             falling_time = 0
-            cur_figure.y += 1
+            cur_figure.y += 1 # падение фигуры
             if not (free_cells(cur_figure, board)) and cur_figure.y > 0:
                 cur_figure.y -= 1
                 change_piece = True
@@ -400,7 +401,7 @@ if __name__ == "__main__":
                 pygame.display.quit()
                 quit()
 
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:            # перемещение и поворот
                 if event.key == pygame.K_LEFT:
                     cur_figure.x -= 1
                     if not free_cells(cur_figure, board):
@@ -427,7 +428,7 @@ if __name__ == "__main__":
             if y > -1:
                 board[y][x] = cur_figure.color
 
-        if change_piece:
+        if change_piece:   # новая фигура
             for cords in figure_cord:
                 fixed_pos[(cords[0], cords[1])] = cur_figure.color
             cur_figure = new_figure()
