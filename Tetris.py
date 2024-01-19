@@ -185,8 +185,7 @@ def delete_rows(board, fixed, score):
         if (255, 255, 255) not in row:
             full_rows += 1
             last_y = i
-            score[0] = score[0] + 10
-            print(score[0])  # повысить уровень
+            score = score + 10
             for j in range(len(row)):
                 del fixed[(j, i)]  # остаются только белые клетки
 
@@ -230,31 +229,34 @@ class Interface(pygame.sprite.Sprite):
         image = pygame.image.load(fullname)
         return image
 
-    def start_screen(self, type):
-        if type == "start":
-            intro_text = ["Tetris", "",
-                          "Для начала игры нажмите на пробел",
-                          f"Лучший счет - {best}"]
-            filename = 'start_screen.jpg'
+    def start_screen(self, type, flag=True):
+        if flag:
+            if type == "start":
+                intro_text = ["Tetris", "",
+                              "Для начала игры нажмите на пробел",
+                              f"Лучший счет - {best}"]
+                filename = 'start_screen.jpg'
+            else:
+                intro_text = ["Tetris", "",
+                              "Пауза",
+                              "Для продолжения игры нажмите на пробел",
+                              f"Ваш счет - {best}"]
+                filename = 'start_screen.jpg'
+            fon = pygame.transform.scale(self.load_image(filename), (block_size * 24, block_size * 24))
+            screen.blit(fon, (0, 0))
+            text_coord = block_size * 2
+            for line in intro_text:
+                font = pygame.font.Font(None, block_size * 2) if line == "Tetris" else pygame.font.Font(None,
+                                                                                                        block_size * 1)
+                string_rendered = font.render(line, 1, pygame.Color('white'))
+                intro_rect = string_rendered.get_rect()
+                text_coord += block_size
+                intro_rect.top = text_coord
+                intro_rect.x = block_size
+                text_coord += intro_rect.height
+                screen.blit(string_rendered, intro_rect)
         else:
-            intro_text = ["Tetris", "",
-                          "Пауза",
-                          "Для продолжения игры нажмите на пробел",
-                          f"Ваш счет - {best}"]
-            filename = 'start_screen.jpg'
-        fon = pygame.transform.scale(self.load_image(filename), (block_size * 24, block_size * 24))
-        screen.blit(fon, (0, 0))
-        text_coord = block_size * 2
-        for line in intro_text:
-            font = pygame.font.Font(None, block_size * 2) if line == "Tetris" else pygame.font.Font(None,
-                                                                                                    block_size * 1)
-            string_rendered = font.render(line, 1, pygame.Color('white'))
-            intro_rect = string_rendered.get_rect()
-            text_coord += block_size
-            intro_rect.top = text_coord
-            intro_rect.x = block_size
-            text_coord += intro_rect.height
-            screen.blit(string_rendered, intro_rect)
+            pygame.quit()
 
     def print_text(self, surface, word, size, text_color, x, y):
         if word == "TETRIS":
@@ -350,41 +352,6 @@ class Interface(pygame.sprite.Sprite):
                                  (indent + x * block_size + px, indent + y * block_size + py, block_size - p0x,
                                   block_size - p0y), 0)
 
-
-# def load_level(tick):
-#     cur_fig = None
-#     with open('data/figures.txt', 'r') as mapFile:
-#         level_map = [line.strip() for line in mapFile]
-#     shape = random.choice(list(figures.keys()))
-#     figure = random.choice(figures.get(shape))
-#     for k in range(len(level_map)):
-#         last_line_x = set()
-#         if tick == 1000:
-#             for j in range(4, -1, -1):
-#                 if '0' in figure[j]:
-#                     last_line = figure[j]  # ..00.
-#                     break
-#             for i in range(5):
-#                 if last_line[i] == '0':
-#                     last_line_x.append(i)  # (2,3)
-#             level_last_x = set()
-#             if level_map[k + 1] in level_map:
-#                 for i in range(5):
-#                     if level_map[k + 1] == '0':
-#                         last_line_x.append(i)
-#             if len(last_line_x.intersection(
-#                     level_last_x)) == 0:  # если на последней строке фигуры с 0 индекс 0 совпадает
-#                 for i in range(5):  # с индексом 0 на следующей строке файла цикл прекращается
-#                     new_line = 10 * '.' + figure[i] + 10 * '.'
-#                     level_map[i] = new_line
-#                 mapFile.close()
-#                 a = open('data/figures.txt', mode='w', encoding='utf-8')
-#                 for el in level_map:
-#                     a.write(el + '\n')
-#             else:
-#                 break
-#             a.close()
-
 if __name__ == "__main__":
 
     screen_width = block_size * 24
@@ -398,6 +365,7 @@ if __name__ == "__main__":
     icon = pygame.image.load("data\icon.png")
     pygame.display.set_icon(icon)
     global board
+    global score
     score = 0
     fixed_pos = {}
     board = create_board(fixed_pos)
@@ -416,80 +384,75 @@ if __name__ == "__main__":
     all_sprites.add(gi)
     play = False
     while run:
-        screen.fill((0,0,0))
+        if score < 20:  # изменение скорости в зависимости от счета
+            falling_speed = float(speeds[0][:-1])
+        elif 20 <= score < 40:
+            falling_speed = float(speeds[1][:-1])
+            level_text = 'Level 2'
+        elif 40 <= score:
+            falling_speed = float(speeds[2][:-1])
+            level_text = 'Level 3'
+
+        board = create_board(fixed_pos)
+        falling_time += clock.get_rawtime()
+        clock.tick()
+
+        if falling_time / 1000 >= falling_speed:
+            falling_time = 0
+            cur_figure.y += 1  # падение фигуры
+            if not (free_cells(cur_figure, board)) and cur_figure.y > 0:
+                cur_figure.y -= 1
+                change_piece = True
+
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                pygame.display.quit()
-                quit()
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    cur_figure.x -= 1
-                    if not free_cells(cur_figure, board):
-                        cur_figure.x += 1
-
-                elif event.key == pygame.K_RIGHT:
-                    cur_figure.x += 1
-                    if not free_cells(cur_figure, board):
+                if event.type == pygame.KEYDOWN:  # перемещение и поворот
+                    if event.key == pygame.K_LEFT:
                         cur_figure.x -= 1
-                elif event.key == pygame.K_UP:
-                    cur_figure.rotation = cur_figure.rotation + 1 % len(cur_figure.figure)
-                    if not free_cells(cur_figure, board):
-                        cur_figure.rotation = cur_figure.rotation - 1 % len(cur_figure.figure)
+                        if not free_cells(cur_figure, board):
+                            cur_figure.x += 1
 
-                elif event.key == pygame.K_DOWN:
-                    cur_figure.y += 1
-                    if not free_cells(cur_figure, board):
-                        cur_figure.y -= 1
+                    elif event.key == pygame.K_RIGHT:
+                        cur_figure.x += 1
+                        if not free_cells(cur_figure, board):
+                            cur_figure.x -= 1
+                    elif event.key == pygame.K_UP:
+                        cur_figure.rotation = cur_figure.rotation + 1 % len(cur_figure.figure)
+                        if not free_cells(cur_figure, board):
+                            cur_figure.rotation = cur_figure.rotation - 1 % len(cur_figure.figure)
 
-                elif event.type == pygame.QUIT:
-                    running = False
+                    if event.key == pygame.K_DOWN:
+                        cur_figure.y += 1
+                        if not free_cells(cur_figure, board):
+                            cur_figure.y -= 1
 
-                if event.key == pygame.K_SPACE:
+                if event.type == pygame.QUIT:
+                    run = False
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                     play = True
                     type = "pause"
-
-                if event.key == pygame.K_ESCAPE:
-                    play = False
-                    type = "pause"
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    if not play:
+                        run= False
+                    else:
+                        play = False
+                        type = "pause"
 
         if play:
-
             figure_cord = change_format(cur_figure)
-            if score < 20:
-                falling_speed = float(speeds[0][:-1])
-            elif 20 <= score < 40:
-                falling_speed = float(speeds[1][:-1])
-                level_text = 'Level 2'
-            elif 40 <= score:
-                falling_speed = float(speeds[2][:-1])
-                level_text = 'Level 3'
-            board = create_board(fixed_pos)
-            falling_time += clock.get_rawtime()
-            clock.tick()
-            if falling_time / 1000 >= falling_speed:
-                falling_time = 0
-                cur_figure.y += 1
-                if not (free_cells(cur_figure, board)) and cur_figure.y > 0:
-                    cur_figure.y -= 1
-                    change_piece = True
-            all_sprites.draw(screen)
-
-
 
             for i in range(len(figure_cord)):
                 x, y = figure_cord[i]
                 if y > -1:
                     board[y][x] = cur_figure.color
 
-            if change_piece:
+            if change_piece:  # новая фигура
                 for cords in figure_cord:
                     fixed_pos[(cords[0], cords[1])] = cur_figure.color
                 cur_figure = new_figure()
                 change_piece = False
 
                 delete_rows(board, fixed_pos, score)
+            all_sprites.draw(screen)
             gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
             gi.print_text(screen, "BEST", 1, "#FFC200", 2, 4)
             gi.print_text(screen, best, 1, "white", len(best) - 3, 5)
@@ -498,8 +461,11 @@ if __name__ == "__main__":
             gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
             draw_app(screen)
             pygame.display.update()
+            if game_over(fixed_pos):
+                run = False
         else:
             gi.start_screen(type)
-        pygame.display.flip()
         pygame.display.update()
 pygame.quit()
+
+
