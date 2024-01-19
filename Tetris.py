@@ -398,7 +398,7 @@ if __name__ == "__main__":
     icon = pygame.image.load("data\icon.png")
     pygame.display.set_icon(icon)
     global board
-    score = [0]
+    score = 0
     fixed_pos = {}
     board = create_board(fixed_pos)
     change_piece = False
@@ -416,6 +416,7 @@ if __name__ == "__main__":
     all_sprites.add(gi)
     play = False
     while run:
+        screen.fill((0,0,0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -437,68 +438,68 @@ if __name__ == "__main__":
                     if not free_cells(cur_figure, board):
                         cur_figure.rotation = cur_figure.rotation - 1 % len(cur_figure.figure)
 
-                if event.key == pygame.K_DOWN:
+                elif event.key == pygame.K_DOWN:
                     cur_figure.y += 1
                     if not free_cells(cur_figure, board):
                         cur_figure.y -= 1
-                if event.type == pygame.QUIT:
+
+                elif event.type == pygame.QUIT:
                     running = False
+
                 if event.key == pygame.K_SPACE:
                     play = True
                     type = "pause"
+
                 if event.key == pygame.K_ESCAPE:
                     play = False
                     type = "pause"
-    if play:
-        if score[0] < 20:
-            falling_speed = float(speeds[0][:-1])
-        elif 20 <= score[0] < 40:
-            falling_speed = float(speeds[1][:-1])
-            level_text = 'Level 2'
-        elif 40 <= score[0]:
-            falling_speed = float(speeds[2][:-1])
-            level_text = 'Level 3'
 
-        board = create_board(fixed_pos)
-        falling_time += clock.get_rawtime()
-        clock.tick()
+        if play:
 
-        if falling_time / 1000 >= falling_speed:
-            falling_time = 0
-            cur_figure.y += 1
-            if not (free_cells(cur_figure, board)) and cur_figure.y > 0:
-                cur_figure.y -= 1
-                change_piece = True
+            figure_cord = change_format(cur_figure)
+            if score < 20:
+                falling_speed = float(speeds[0][:-1])
+            elif 20 <= score < 40:
+                falling_speed = float(speeds[1][:-1])
+                level_text = 'Level 2'
+            elif 40 <= score:
+                falling_speed = float(speeds[2][:-1])
+                level_text = 'Level 3'
+            board = create_board(fixed_pos)
+            falling_time += clock.get_rawtime()
+            clock.tick()
+            if falling_time / 1000 >= falling_speed:
+                falling_time = 0
+                cur_figure.y += 1
+                if not (free_cells(cur_figure, board)) and cur_figure.y > 0:
+                    cur_figure.y -= 1
+                    change_piece = True
             all_sprites.draw(screen)
-        gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
-        gi.print_text(screen, "BEST", 1, "#FFC200", 2, 4)
-        gi.print_text(screen, best, 1, "white", len(best) - 3, 5)
-        gi.print_text(screen, "YOUR SCORE", 0.75, "white", 4.2, 22.25)
-        gi.print_text(screen, "By D&E ", 0.5, "white", 22.2, 23.2)
-        gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
-    else:
-        gi.start_screen(type)
-    pygame.display.flip()
-    pygame.display.update()
 
-    figure_cord = change_format(cur_figure)
 
-    for i in range(len(figure_cord)):
-        x, y = figure_cord[i]
-        if y > -1:
-            board[y][x] = cur_figure.color
 
-    if change_piece:
-        for cords in figure_cord:
-            fixed_pos[(cords[0], cords[1])] = cur_figure.color
-        cur_figure = new_figure()
-        change_piece = False
+            for i in range(len(figure_cord)):
+                x, y = figure_cord[i]
+                if y > -1:
+                    board[y][x] = cur_figure.color
 
-        delete_rows(board, fixed_pos, score)
+            if change_piece:
+                for cords in figure_cord:
+                    fixed_pos[(cords[0], cords[1])] = cur_figure.color
+                cur_figure = new_figure()
+                change_piece = False
 
-    draw_app(screen)
-    pygame.display.update()
-
-    if game_over(fixed_pos):
-        run = False
-    pygame.display.update()
+                delete_rows(board, fixed_pos, score)
+            gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
+            gi.print_text(screen, "BEST", 1, "#FFC200", 2, 4)
+            gi.print_text(screen, best, 1, "white", len(best) - 3, 5)
+            gi.print_text(screen, "YOUR SCORE", 0.75, "white", 4.2, 22.25)
+            gi.print_text(screen, "By D&E ", 0.5, "white", 22.2, 23.2)
+            gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
+            draw_app(screen)
+            pygame.display.update()
+        else:
+            gi.start_screen(type)
+        pygame.display.flip()
+        pygame.display.update()
+pygame.quit()
