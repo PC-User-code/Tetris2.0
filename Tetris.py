@@ -185,7 +185,8 @@ def delete_rows(board, fixed, score):
         if (255, 255, 255) not in row:
             full_rows += 1
             last_y = i
-            score = score + 10
+            score[0] = score[0] + 10
+            print(score[0])
             for j in range(len(row)):
                 del fixed[(j, i)]  # остаются только белые клетки
 
@@ -365,8 +366,8 @@ if __name__ == "__main__":
     icon = pygame.image.load("data\icon.png")
     pygame.display.set_icon(icon)
     global board
-    global score
-    score = 0
+    # global score
+    Score = [0]
     fixed_pos = {}
     board = create_board(fixed_pos)
     change_piece = False
@@ -384,12 +385,12 @@ if __name__ == "__main__":
     all_sprites.add(gi)
     play = False
     while run:
-        if score < 20:  # изменение скорости в зависимости от счета
+        if Score[0] < 20:  # изменение скорости в зависимости от счета
             falling_speed = float(speeds[0][:-1])
-        elif 20 <= score < 40:
+        elif 20 <= Score[0] < 40:
             falling_speed = float(speeds[1][:-1])
             level_text = 'Level 2'
-        elif 40 <= score:
+        elif 40 <= Score[0]:
             falling_speed = float(speeds[2][:-1])
             level_text = 'Level 3'
 
@@ -451,14 +452,14 @@ if __name__ == "__main__":
                 cur_figure = new_figure()
                 change_piece = False
 
-                delete_rows(board, fixed_pos, score)
+                delete_rows(board, fixed_pos, Score)
             all_sprites.draw(screen)
             gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
             gi.print_text(screen, "BEST", 1, "#FFC200", 2, 4)
             gi.print_text(screen, best, 1, "white", len(best) - 3, 5)
             gi.print_text(screen, "YOUR SCORE", 0.75, "white", 4.2, 22.25)
             gi.print_text(screen, "By D&E ", 0.5, "white", 22.2, 23.2)
-            gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
+            gi.print_text(screen, Score[0], 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
             draw_app(screen)
             pygame.display.update()
             if game_over(fixed_pos):
