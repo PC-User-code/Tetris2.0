@@ -117,13 +117,14 @@ def create_board(fixed_positions={}):  # матрица 10 на 20 с значе
     for i in range(len(grid)):
         for j in range(len(grid[i])):
             if (j, i) in fixed_positions:
-                c = fixed_positions[(j, i)] # если в словаре с фигурами, котрые заффиксированы на дне есть данные, то они заносятся в матрицу
+                c = fixed_positions[(j,
+                                     i)]  # если в словаре с фигурами, котрые заффиксированы на дне есть данные, то они заносятся в матрицу
 
                 grid[i][j] = c
     return grid
 
 
-def draw_board(screen, row, column):   # отрисовка поля
+def draw_board(screen, row, column):  # отрисовка поля
     for i in range(row):
         pygame.draw.line(screen, (0, 0, 0), (mx_left_x, mx_left_y + i * block_size),
                          (mx_left_x + tetris_width, mx_left_y + i * block_size))
@@ -154,11 +155,10 @@ def change_format(figure):  # поворот фигуры - остаток от 
     for i, pos in enumerate(cords):
         cords[i] = (pos[0] - 2, pos[1] - 2)
 
-    return cords # возвращает список кортежей с х и у, на котрых находятся клетки фигуры
+    return cords  # возвращает список кортежей с х и у, на котрых находятся клетки фигуры
 
 
-
-def free_cells(shape, grid): # проверка что клетка свободна
+def free_cells(shape, grid):  # проверка что клетка свободна
     free_cells = [[(j, i) for j in range(10) if grid[i][j] == (255, 255, 255)] for i in range(20)]
     free_cells = [j for sub in free_cells for j in sub]
     changed = change_format(shape)
@@ -171,7 +171,7 @@ def free_cells(shape, grid): # проверка что клетка свобод
     return True
 
 
-def game_over(positions): # если координаты блока по у меньше 1, т.е. на верхней строке - конец
+def game_over(positions):  # если координаты блока по у меньше 1, т.е. на верхней строке - конец
     for pos in positions:
         x, y = pos
         if y < 1:
@@ -179,7 +179,7 @@ def game_over(positions): # если координаты блока по у м�
     return False
 
 
-def new_figure(): # новая случайная фигура
+def new_figure():  # новая случайная фигура
     global figures, colors
     return Block(5, 0, random.choice(figures))
 
@@ -188,7 +188,7 @@ def delete_rows(board, fixed, score):  # удаление заполненной
     full_rows = 0
     for i in range(len(board) - 1, -1, -1):
         row = board[i]
-        if (255, 255, 255) not in row: # все клетки цветные
+        if (255, 255, 255) not in row:  # все клетки цветные
             full_rows += 1
             last_y = i
             score[0] = score[0] + 10
@@ -196,7 +196,7 @@ def delete_rows(board, fixed, score):  # удаление заполненной
             for j in range(len(row)):
                 del fixed[(j, i)]  # остаются только белые клетки
 
-    if full_rows > 0: # колличество удаленных строк, от которого зависит на сколько упадут фигуры, котрые не удалились
+    if full_rows > 0:  # колличество удаленных строк, от которого зависит на сколько упадут фигуры, котрые не удалились
         for key in sorted(list(fixed), key=lambda x: x[1])[::-1]:
             x, y = key
             if y < last_y:
@@ -204,7 +204,7 @@ def delete_rows(board, fixed, score):  # удаление заполненной
                 fixed[new_key] = fixed.pop(key)
 
 
-def draw_score(screen, score, level): # отрисовка счета и уровня
+def draw_score(screen, score, level):  # отрисовка счета и уровня
     x = mx_left_x + tetris_width + 50
     y = mx_left_y + tetris_height / 2 - 100
     font = pygame.font.SysFont('yugothicui', 30)
@@ -216,8 +216,13 @@ def draw_score(screen, score, level): # отрисовка счета и уро�
     screen.blit(score_txt, (x + 70, y + 180))
 
 
-def draw_app(screen): # отрисовка всего
+def draw_app(screen):  # отрисовка всего
     screen.fill((0, 0, 0))
+    frame_x = mx_left_x - 5
+    frame_y = mx_left_y - 5
+    pygame.draw.rect(screen, ('#a5a52c'), (frame_x - 5, frame_y - 5, frame_x + 66 + 10, frame_y + tetris_height), 0)
+    pygame.draw.rect(screen, ('#2ca7a1'), (frame_x, frame_y, frame_x + 66, frame_y + tetris_height), 0)
+
     font = pygame.font.SysFont('yugothicui', 60)
     text = font.render('T E T R I S', 1, (255, 255, 255))
     screen.blit(text, (mx_left_x + tetris_width / 2 - (text.get_width() / 2), 30))
@@ -226,6 +231,29 @@ def draw_app(screen): # отрисовка всего
             pygame.draw.rect(screen, board[i][j],
                              (mx_left_x + j * block_size, mx_left_y + i * block_size, block_size, block_size), 0)
     draw_board(screen, 20, 10)
+
+
+def draw_main_menu(color, surface):
+    font = pygame.font.SysFont("yugothicui", 60)
+    t = font.render("T", 1, pygame.Color("#D30068"), pygame.Color("black"))
+    e = font.render("E", 1, pygame.Color("#00737E"), pygame.Color("black"))
+    r = font.render("R", 1, pygame.Color("#FF9F00"), pygame.Color("black"))
+    i = font.render("I", 1, pygame.Color("#E60042"), pygame.Color("black"))
+    s = font.render("S", 1, pygame.Color("#00737E"), pygame.Color("black"))
+    tetris = [t, e, t, r, i, s]
+    x = screen_width // 2 - 160
+    y = mx_left_y + 10
+    for i in range(5):
+        surface.blit(tetris[i], (x + i * 60, y))
+    surface.blit(tetris[-1], (x + i * 60 + 40, y))
+    start = "Нажмите пробел чтобы начать"
+    esc = "Нажмите esc чтобы выйти"
+    font = pygame.font.SysFont("yugothicui", 30)
+
+    text_start = font.render(start, 1, color)
+    text_esc = font.render(esc, 1, color)
+    surface.blit(text_start, (25, 400))
+    surface.blit(text_esc, (25, 500))
 
 
 # class Tetris:
@@ -360,7 +388,7 @@ def draw_app(screen): # отрисовка всего
 #                 break
 #             a.close()
 
-if __name__ == "__main__":
+def main():
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption('T E T R I S')
     global board
@@ -368,14 +396,14 @@ if __name__ == "__main__":
     fixed_pos = {}
     board = create_board(fixed_pos)
     change_piece = False
-    run = True
+    running = True
     cur_figure = new_figure()
     clock = pygame.time.Clock()
     falling_time = 0
     level_text = 'Level 1'
     speeds = open('data/speed.txt', 'r').readlines()
-    while run:
-        if Score[0] < 20:               # изменение скорости в зависимости от счета
+    while running:
+        if Score[0] < 20:  # изменение скорости в зависимости от счета
             falling_speed = float(speeds[0][:-1])
         elif 20 <= Score[0] < 40:
             falling_speed = float(speeds[1][:-1])
@@ -390,18 +418,22 @@ if __name__ == "__main__":
 
         if falling_time / 1000 >= falling_speed:
             falling_time = 0
-            cur_figure.y += 1 # падение фигуры
+            cur_figure.y += 1  # падение фигуры
             if not (free_cells(cur_figure, board)) and cur_figure.y > 0:
                 cur_figure.y -= 1
                 change_piece = True
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
+                running = False
                 pygame.display.quit()
                 quit()
 
-            if event.type == pygame.KEYDOWN:            # перемещение и поворот
+            if event.type == pygame.KEYDOWN:  # перемещение и поворот
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                    pygame.display.quit
+                    quit()
                 if event.key == pygame.K_LEFT:
                     cur_figure.x -= 1
                     if not free_cells(cur_figure, board):
@@ -428,7 +460,7 @@ if __name__ == "__main__":
             if y > -1:
                 board[y][x] = cur_figure.color
 
-        if change_piece:   # новая фигура
+        if change_piece:  # новая фигура
             for cords in figure_cord:
                 fixed_pos[(cords[0], cords[1])] = cur_figure.color
             cur_figure = new_figure()
@@ -442,47 +474,29 @@ if __name__ == "__main__":
         pygame.display.update()
 
         if game_over(fixed_pos):
-            run = False
+            running = False
         pygame.display.update()
 
-# if __name__ == "__main__":
-#     # figures = {"o": "#0F4FA8", "t": "#FFCA90", "l": "#D30068", "j": "#FF9F00", "s": "#00737E", "z": "#3F92D2",
-#     #            "i": "#E60042"}
-#     pygame.init()
-#     size = screen_width, screen_height
-#     screen = pygame.display.set_mode(size)
-#     pygame.display.set_caption("Tetris")
-#     icon = pygame.image.load("data\icon.png")
-#     pygame.display.set_icon(icon)
-#     clock = pygame.time.Clock()
-#     # all_sprites = pygame.sprite.Group()
-#     # gi = Interface()
-#     # all_sprites.add(gi)
-#     # load_level(1)
-#     fps = 30
-#     # start_screen()
-#     running = True
-#     # if not tests:
-#     #     score = 1058
-#     #         while running:
-#     #             events = pygame.event.get()
-#     #             for event in events:
-#     #                 if event.type == pygame.QUIT:
-#     #                     running = False
-#     #             screen.fill((0, 0, 0))
-#     #             # all_sprites.draw(screen)
-#     #             # gi.print_text(screen, "TETRIS", 2, "red", 9, 1)
-#     #             # gi.print_text(screen, "By D&E ", 0.5, "white", 22.2, 23.2)
-#     #             # gi.print_text(screen, "YOUR SCORE", 0.75, "white", 4.2, 22.25)
-#     #             # gi.print_text(screen, score, 0.75, pygame.Color("#FFAA00"), 6.25, 23.2)
-#     #             pygame.display.flip()
-#     #             clock.tick(FPS)
-#     while running:
-#
-#         for event in pygame.event.get():
-#             if event.type == pygame.QUIT:
-#                 running = False
-#             create_board()
-#             draw_board(screen, 10, 20)
-#         pygame.display.flip()
-# pygame.quit()
+
+def menu():
+    run = True
+    bg_color = (0, 0, 0)
+    while run:
+        start.fill(bg_color)
+        draw_main_menu((68, 141, 137), start)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    main()
+                elif event.key == pygame.K_ESCAPE:
+                    run = False
+
+    pygame.quit()
+
+
+start = pygame.display.set_mode((screen_width, screen_height))
+menu()
